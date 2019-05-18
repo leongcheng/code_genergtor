@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head th:replace="common/main-css"></head>
+<head>
+<title>${comments}</title>
+</head>
+<body>
+	<div class="container-fluid m-b-xs" id="webApp" v-cloak>
+		<div class="row m-b-sm m-t-sm">
+			<div class="col-md-9 col-sm-9 col-xs-9">
+			    <a class="btn btn-success btn-sm" shiro:hasPermission="${moduleName}:${pathName}:list" @click="reloadWindow" title="刷新">
+					<i class="fa fa-refresh"></i>
+				</a>
+				<a class="btn btn-success btn-sm" shiro:hasPermission="${moduleName}:${pathName}:save" @click="add" title="添加" data-toggle="modal">
+					<i class="fa fa-plus"></i>
+					&nbsp;添加
+				</a>
+				<a class="btn btn-success btn-sm" shiro:hasPermission="${moduleName}:${pathName}:update" @click="update" title="修改" data-toggle="modal">
+					<i class="fa fa-pencil-square-o"></i>
+					&nbsp;修改
+				</a>
+				<a class="btn btn-danger btn-sm" shiro:hasPermission="${moduleName}:${pathName}:delete" title="删除" @click="del">
+					<i class="fa fa-trash-o"></i>
+					&nbsp;删除
+				</a>
+			</div>
+			<div class="col-md-3 col-sm-3 col-xs-3">
+				<div class="input-group input-group-sm" shiro:hasPermission="${moduleName}:${pathName}:list">
+					<input type="text" class="form-control" v-model="condition.information"
+						@keyup.enter="query" placeholder="">
+					<span class="input-group-btn">
+						<button type="button" class="btn btn-success" @click="query">
+							<i class="fa fa-search"></i>
+							&nbsp;搜索
+						</button>
+					</span>
+				</div>
+			</div>
+		</div>
+		<table id="jqGrid"></table>
+		<div id="jqGridPager"></div>
+		<div class="modal fade bs-example-modal-lg" id="modalSaveOrUpdate" tabindex="-1" role="dialog"
+			aria-labelledby="myLargeModalLabel" aria-hidden="true">
+			<div class="modal-dialog modal-lg" role="document">
+				<div class="modal-content">
+					<div class="form-horizontal">
+						<div class="modal-header">
+							<h3 class="modal-title text-success">{{title}}
+								<span class="ibox-tools">
+									<i class="glyphicon glyphicon-remove pointer" data-dismiss="modal"></i>
+								</span>
+							</h3>
+						</div>
+						<div class="modal-body">
+							#foreach($column in $columns) 
+								#if($column.columnName != $pk.columnName)
+									<div class="form-group form-group-sm">
+										<div class="col-sm-3 control-label font-bold">${column.comments}：</div>
+										<div class="col-sm-8">
+											<input type="text" class="form-control" v-model="${classname}.${column.attrname}"
+												placeholder="" />
+										</div>
+									</div>
+								#end 
+							#end
+						</div>
+						<div class="modal-footer">
+						    <button class="btn btn-sm btn-success" @click="saveOrUpdate" data-toggle="modal">确认保存</button>
+							<button class="btn btn-sm btn-default" data-dismiss="modal">取消</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+    <div th:replace="common/main-js"></div>
+	<script type="text/javascript" th:src="@{/statics/js/modules/${moduleName}/${pathName}.js}"></script>
+</body>
+</html>

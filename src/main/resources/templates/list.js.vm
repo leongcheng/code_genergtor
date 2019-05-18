@@ -1,0 +1,142 @@
+$(function () {
+    var contentHight = Math.max($("body").height()-140,360);
+    $("#jqGrid").jqGrid({
+        url: baseURL + '${moduleName}/${pathName}/list',
+        datatype: "json",
+        colModel: [			
+#foreach($column in $columns)
+#if($column.columnName == $pk.columnName)
+			{ label: '${column.attrname}', name: '${column.attrname}', index: '${column.columnName}', width: 50, key: true,hidden : true },
+#else
+			{ label: '${column.comments}', name: '${column.attrname}', index: '${column.columnName}', width: 80 }#if($velocityCount != $columns.size()), #end
+			
+#end			
+#end
+        ],
+		viewrecords: true,
+        height: contentHight,
+        rowNum: 10,
+		rowList : [10,20,30,50],
+        rownumbers: true, 
+        rownumWidth: 25, 
+        autowidth:true,
+        multiselect: true,
+        pager: "#jqGridPager",
+        jsonReader : {
+            root: "page.list",
+            page: "page.currPage",
+            total: "page.totalPage",
+            records: "page.totalCount"
+        },
+        prmNames : {
+            page:"page", 
+            rows:"limit", 
+            order: "order"
+        },
+        gridComplete:function(){
+        	//隐藏grid底部滚动条
+        	$("#jqGrid").closest(".ui-jqgrid-bdiv").css({ "overflow-x" : "hidden" }); 
+        }
+    });
+});
+
+var vm = new Vue({
+	el:'#webApp',
+	data:{
+	    condition :{
+			information : ''
+		},
+		title: null,
+		${classname}: {}
+	},
+	methods: {
+	    resetSelect : function() {
+			$(".selectpicker").selectpicker('refresh');
+			$(".selectpicker").selectpicker('render');
+		},
+		buttonAbledControl: function(object) {
+			object.attr("disabled",true);
+			setTimeout(
+				function(){
+					object.removeAttr("disabled");
+				}, 1000);
+	    },
+		query: function () {
+			vm.reload();
+		},
+		add: function(){
+			vm.title = "添加";
+			vm.${classname} = {};
+			$("#modalSaveOrUpdate").modal('show');
+		},
+		update: function (event) {
+			var $pk.attrname = getSelectedRow();
+			if($pk.attrname == null){
+				return ;
+			}
+            vm.title = "修改";
+            vm.getInfo(${pk.attrname});
+            $("#modalSaveOrUpdate").modal('show');
+		},
+		saveOrUpdate: function (event) {
+		    vm.buttonAbledControl($(event.currentTarget));
+			var url = vm.${classname}.${pk.attrname} == null ? "${moduleName}/${pathName}/save" : "${moduleName}/${pathName}/update";
+			layer.msg("确认保存中，请稍候。");
+			$.ajax({
+				type: "POST",
+			    url: baseURL + url,
+                contentType: "application/json",
+			    data: JSON.stringify(vm.${classname}),
+			    success: function(r){
+			        layer.closeAll();
+			    	if(r.code === 0){
+			    		layer.msg('操作成功');
+			    		$("#modalSaveOrUpdate").modal('hide');
+						vm.reload();
+					}else{
+						layer.alert(r.msg);
+					}
+				}
+			});
+		},
+		del: function (event) {
+			var ${pk.attrname}s = getSelectedRows();
+			if(${pk.attrname}s == null){
+				return ;
+			}
+			layer.confirm('确定要删除选中的记录？', function(){
+				layer.msg("删除中，请稍候。");
+				$.ajax({
+					type: "POST",
+				    url: baseURL + "${moduleName}/${pathName}/delete",
+                    contentType: "application/json",
+				    data: JSON.stringify(${pk.attrname}s),
+				    success: function(r){
+				    	layer.closeAll();
+						if(r.code == 0){
+							layer.msg('操作成功');
+							vm.reload();
+						}else{
+							layer.alert(r.msg);
+						}
+					}
+				});
+			});
+		},
+		getInfo: function(${pk.attrname}){
+			$.get(baseURL + "${moduleName}/${pathName}/info/"+${pk.attrname}, function(r){
+                vm.${classname} = r.${classname};
+            });
+		},
+		reload: function (event) {
+			var page = $("#jqGrid").jqGrid('getGridParam','page');
+			$("#jqGrid").jqGrid('setGridParam',{
+			    postData:{'information': vm.condition.information}, 
+                page:page
+            }).trigger("reloadGrid");
+		},
+		reloadWindow:function(){
+			window.location.reload();
+		}
+	}
+});
